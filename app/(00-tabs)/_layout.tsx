@@ -37,7 +37,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="add-video"
         options={{
           title: "Add Video",
           tabBarIcon: ({ color }) => (

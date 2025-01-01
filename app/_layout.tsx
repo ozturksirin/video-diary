@@ -1,4 +1,4 @@
-import { Slot, Stack } from "expo-router"; // Slot ve Stack kullanımı
+import { Redirect, Stack } from "expo-router";
 import {
   DarkTheme,
   DefaultTheme,
@@ -36,13 +36,18 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
-
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
-        {/* Ana sekme navigasyonu */}
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        {/* Hata durumunda açılan sayfa */}
+        <Stack.Screen name="(00-tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(crops)"
+          options={{
+            headerShown: true,
+            title: "Crop Video", // Başlık
+            headerBackTitle: "Geri", //
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
