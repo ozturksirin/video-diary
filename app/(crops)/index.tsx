@@ -126,7 +126,7 @@ const TrimVideo = () => {
 
         if (ReturnCode.isSuccess(returnCode)) {
           const logs = await session.getLogs();
-          logs.forEach((log) => console.log("FFmpeg Log:", log.message));
+          //logs.forEach((log) => console.log("FFmpeg Log:", log.message));
 
           setTrimmedVideoUri(trimmedOutput);
           setSelectedPoints([]);
@@ -156,7 +156,7 @@ const TrimVideo = () => {
         useNativeControls
       />
 
-      <View className="flex-1 bg-gray-900 p-4">
+      <View className=" bg-gray-900 p-4">
         <Text className="text-white mb-2">
           {selectedPoints.length === 2
             ? "Ready to trim"
@@ -183,7 +183,7 @@ const TrimVideo = () => {
                   setSelectedPoints([index]);
                 }
               }}
-              className={`w-16 h-18 m-1 rounded-md flex items-center justify-center ${
+              className={`w-16 h-16 m-1 rounded-md flex items-center justify-center ${
                 selectedPoints.length === 2 &&
                 index >= Math.min(...selectedPoints) &&
                 index <= Math.max(...selectedPoints)
