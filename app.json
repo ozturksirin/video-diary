@@ -9,13 +9,15 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ozturksirin.videodiary"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.ozturksirin.videodiary"
     },
     "web": {
       "bundler": "metro",
@@ -38,6 +40,12 @@
         {
           "supportsBackgroundPlayback": true,
           "supportsPictureInPicture": true
+        }
+      ],
+      [
+        "@config-plugins/ffmpeg-kit-react-native",
+        {
+          "package": "full"
         }
       ]
     ],
