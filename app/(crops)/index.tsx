@@ -22,6 +22,7 @@ const TrimVideo = () => {
   const [isTrimming, setIsTrimming] = useState(false);
   const [trimmedVideoUri, setTrimmedVideoUri] = useState<string | null>(null);
   const [thumbnails, setThumbnails] = useState<string[]>([]);
+  const [selectedPoints, setSelectedPoints] = useState<number[]>([]);
 
   useEffect(() => {
     generateThumbnails();
@@ -95,7 +96,7 @@ const TrimVideo = () => {
     }
   };
 
-  const handleTrimVideo = async () => {
+  const handleTrimVideo = async (startTime: number, endTime: number) => {
     const trimmedOutput = `${FileSystem.cacheDirectory}trimmed_video.mp4`;
 
     const localUri = videoData?.uri.replace("file://", "");
@@ -123,9 +124,8 @@ const TrimVideo = () => {
         const returnCode = await session.getReturnCode();
 
         if (ReturnCode.isSuccess(returnCode)) {
-          /**          const logs = await session.getLogs();
+          const logs = await session.getLogs();
           logs.forEach((log) => console.log("FFmpeg Log:", log.message));
-           */
 
           setTrimmedVideoUri(trimmedOutput);
           Alert.alert("Başarılı", "Video başarıyla kırpıldı.");
@@ -137,13 +137,12 @@ const TrimVideo = () => {
         }
       });
     } catch (error) {
-      Alert.alert("Error", "An error occurred during video trimming.");
+      Alert.alert("Hata", "Video kırpma işlemi sırasında bir hata oluştu.");
       console.error("FFmpeg error:", error);
     } finally {
       setIsTrimming(false);
     }
   };
-
   return (
     <View className="flex-1 bg-black">
       <Video
@@ -162,12 +161,24 @@ const TrimVideo = () => {
           {thumbnails.map((thumbnail, index) => (
             <TouchableOpacity
               key={index}
-              onPress={() =>
-                index < endTime ? setStartTime(index) : setEndTime(index)
-              }
+              onPress={() => {
+                if (selectedPoints.length === 0) {
+                  setSelectedPoints([index]);
+                } else if (selectedPoints.length === 1) {
+                  const start = Math.min(selectedPoints[0], index);
+                  const end = Math.max(selectedPoints[0], index);
+                  setSelectedPoints([start, end]);
+                } else {
+                  setSelectedPoints([index]);
+                }
+              }}
               className={`w-16 h-16 m-1 rounded-md flex items-center justify-center ${
-                index >= startTime && index <= endTime
+                selectedPoints.length === 2 &&
+                index >= Math.min(...selectedPoints) &&
+                index <= Math.max(...selectedPoints)
                   ? "border-2 border-blue-500"
+                  : selectedPoints.includes(index)
+                  ? "border-2 border-green-500"
                   : "border-2 border-gray-600"
               }`}
             >
@@ -195,13 +206,20 @@ const TrimVideo = () => {
         </View>
       )}
 
-      {!isTrimming && (
+      {selectedPoints.length === 2 && (
         <Button
-          title="Trim Video"
-          onPress={handleTrimVideo}
+          title={`Trim ${Math.min(...selectedPoints)}s - ${Math.max(
+            ...selectedPoints
+          )}s`}
+          onPress={() => {
+            const startTime = Math.min(...selectedPoints);
+            const endTime = Math.max(...selectedPoints);
+            handleTrimVideo(startTime, endTime);
+          }}
           buttonStyle={{
             backgroundColor: "#007AFF",
             padding: 10,
+            marginTop: 10,
           }}
           titleStyle={{ color: "#fff", fontSize: 16 }}
         />
