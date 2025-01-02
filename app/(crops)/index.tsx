@@ -97,6 +97,7 @@ const TrimVideo = () => {
   };
 
   const handleTrimVideo = async (startTime: number, endTime: number) => {
+    setIsTrimming(true);
     const trimmedOutput = `${FileSystem.cacheDirectory}trimmed_video.mp4`;
 
     const localUri = videoData?.uri.replace("file://", "");
@@ -128,16 +129,20 @@ const TrimVideo = () => {
           logs.forEach((log) => console.log("FFmpeg Log:", log.message));
 
           setTrimmedVideoUri(trimmedOutput);
-          Alert.alert("Başarılı", "Video başarıyla kırpıldı.");
+          setSelectedPoints([]);
+          Alert.alert(
+            "Success",
+            "Video trimmed successfully. Select new points to trim again."
+          );
         } else if (ReturnCode.isCancel(returnCode)) {
-          Alert.alert("İptal", "Video kırpma işlemi iptal edildi.");
+          Alert.alert("Cancelled", "Video trimming was cancelled.");
         } else {
-          console.error("FFmpeg işlemi başarısız oldu. Kod:", returnCode);
-          Alert.alert("Hata", "FFmpeg işlemi başarısız oldu.");
+          console.error("FFmpeg process failed. Code:", returnCode);
+          Alert.alert("Error", "FFmpeg process failed.");
         }
       });
     } catch (error) {
-      Alert.alert("Hata", "Video kırpma işlemi sırasında bir hata oluştu.");
+      Alert.alert("Error", "An error occurred while trimming the video.");
       console.error("FFmpeg error:", error);
     } finally {
       setIsTrimming(false);
@@ -147,12 +152,18 @@ const TrimVideo = () => {
     <View className="flex-1 bg-black">
       <Video
         source={{ uri: videoData?.uri || "" }}
-        style={{ flex: 3, width: "100%" }}
+        style={{ flex: 2, width: "100%" }}
         useNativeControls
       />
 
       <View className="flex-1 bg-gray-900 p-4">
-        <Text className="text-white mb-2">Select Start and End Time</Text>
+        <Text className="text-white mb-2">
+          {selectedPoints.length === 2
+            ? "Ready to trim"
+            : selectedPoints.length === 1
+            ? "Select end point"
+            : "Select start point"}
+        </Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -172,7 +183,7 @@ const TrimVideo = () => {
                   setSelectedPoints([index]);
                 }
               }}
-              className={`w-16 h-16 m-1 rounded-md flex items-center justify-center ${
+              className={`w-16 h-18 m-1 rounded-md flex items-center justify-center ${
                 selectedPoints.length === 2 &&
                 index >= Math.min(...selectedPoints) &&
                 index <= Math.max(...selectedPoints)
@@ -200,12 +211,6 @@ const TrimVideo = () => {
         </View>
       </View>
 
-      {isTrimming && (
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-white">Trimming Video...</Text>
-        </View>
-      )}
-
       {selectedPoints.length === 2 && (
         <Button
           title={`Trim ${Math.min(...selectedPoints)}s - ${Math.max(
@@ -225,9 +230,21 @@ const TrimVideo = () => {
         />
       )}
 
+      {isTrimming && (
+        <View className="absolute inset-0 bg-black/50 justify-center items-center">
+          <Text className="text-white">Trimming Video...</Text>
+        </View>
+      )}
+
       {!isTrimming && trimmedVideoUri && (
         <View className="flex-2 p-4">
-          <Text className="text-white mb-2">Trimmed Video:</Text>
+          <Text className="text-white mb-2">
+            Trimmed Video{" "}
+            {selectedPoints.length > 0
+              ? "(Select new points to trim again)"
+              : ""}
+            :
+          </Text>
           <Video
             source={{ uri: trimmedVideoUri }}
             style={{ width: "100%", height: 200 }}
