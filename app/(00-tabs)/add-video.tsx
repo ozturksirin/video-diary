@@ -81,6 +81,7 @@ export default function AddVideo() {
       description: input.description,
     });
     router.navigate("/(crops)");
+    setVideo(null);
     setInput({
       title: "",
       description: "",

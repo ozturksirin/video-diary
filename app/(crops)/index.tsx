@@ -12,6 +12,7 @@ import { Button } from "react-native-elements";
 import { useVideoStore } from "@/store/use-video";
 import { FFmpegKit, ReturnCode } from "ffmpeg-kit-react-native";
 import * as FileSystem from "expo-file-system";
+import { useSaveVideo } from "@/hooks/useSaveVideo";
 
 const TrimVideo = () => {
   const videoData = useVideoStore((state) => state.video);
@@ -23,6 +24,7 @@ const TrimVideo = () => {
   const [trimmedVideoUri, setTrimmedVideoUri] = useState<string | null>(null);
   const [thumbnails, setThumbnails] = useState<string[]>([]);
   const [selectedPoints, setSelectedPoints] = useState<number[]>([]);
+  const { mutate } = useSaveVideo();
 
   useEffect(() => {
     generateThumbnails();
@@ -30,33 +32,24 @@ const TrimVideo = () => {
 
   const generateThumbnails = async () => {
     if (!videoData?.uri) {
-      console.error("Video URI is missing.");
       return;
     }
 
-    console.log("Starting thumbnail generation...");
     const localUri = videoData.uri.replace("file://", "");
     const thumbnailDir = `${FileSystem.cacheDirectory}thumbnails/`;
 
     try {
-      console.log("Clearing old thumbnails...");
       await FileSystem.deleteAsync(thumbnailDir, { idempotent: true });
       await FileSystem.makeDirectoryAsync(thumbnailDir, {
         intermediates: true,
       });
-      console.log("Thumbnail directory created at:", thumbnailDir);
 
       const duration = Math.ceil(videoData.duration! / 1000);
-      console.log("Video duration (seconds):", duration);
 
       const thumbnailPaths = [];
       for (let i = 0; i < duration; i++) {
         const output = `${thumbnailDir}thumb_${i}.jpg`;
         const command = `-y -ss ${i} -i "${localUri}" -vframes 1 -q:v 2 "${output}"`;
-
-        console.log(
-          `Generating thumbnail for second ${i}: Command: ${command}`
-        );
 
         try {
           const session = await FFmpegKit.execute(command);
@@ -65,30 +58,18 @@ const TrimVideo = () => {
           if (returnCode.isValueSuccess()) {
             const info = await FileSystem.getInfoAsync(output);
             if (info.exists) {
-              console.log(`Thumbnail successfully generated: ${output}`);
               thumbnailPaths.push(output);
             } else {
-              console.warn(
-                `Thumbnail file not found after execution: ${output}`
-              );
+              return;
             }
           } else {
-            console.error(
-              `FFmpeg failed for second ${i} with return code:`,
-              returnCode
-            );
-            const logs = await session.getLogs();
-            console.error(`FFmpeg logs for second ${i}:`, logs);
+            return;
           }
-
           await new Promise((resolve) => setTimeout(resolve, 100));
         } catch (error) {
           console.error(`Error generating thumbnail for second ${i}:`, error);
         }
       }
-
-      console.log("Thumbnail generation completed");
-      console.log("Generated valid thumbnails:", thumbnailPaths);
 
       setThumbnails(thumbnailPaths);
     } catch (error) {
@@ -96,9 +77,17 @@ const TrimVideo = () => {
     }
   };
 
+  const generateUniqueFileName = () => {
+    const timestamp = new Date().getTime();
+    const random = Math.floor(Math.random() * 10000);
+    return `trimmed_video_${timestamp}_${random}.mp4`;
+  };
+
   const handleTrimVideo = async (startTime: number, endTime: number) => {
     setIsTrimming(true);
-    const trimmedOutput = `${FileSystem.cacheDirectory}trimmed_video.mp4`;
+    const uniqueFileName = generateUniqueFileName();
+
+    const trimmedOutput = `${FileSystem.cacheDirectory}${uniqueFileName}`;
 
     const localUri = videoData?.uri.replace("file://", "");
     const localOutput = trimmedOutput.replace("file://", "");
@@ -148,6 +137,16 @@ const TrimVideo = () => {
       setIsTrimming(false);
     }
   };
+
+  const handleSaveVideos = () => {
+    console.log("trimmedVideoUri", trimmedVideoUri);
+    if (trimmedVideoUri) {
+      mutate(trimmedVideoUri);
+    } else {
+      Alert.alert("Error", "No trimmed video to save.");
+    }
+  };
+
   return (
     <View className="flex-1 bg-black">
       <Video
@@ -238,12 +237,8 @@ const TrimVideo = () => {
 
       {!isTrimming && trimmedVideoUri && (
         <View className="flex-2 p-4">
-          <Text className="text-white mb-2">
-            Trimmed Video{" "}
-            {selectedPoints.length > 0
-              ? "(Select new points to trim again)"
-              : ""}
-            :
+          <Text className="text-white mb-2" onPress={() => handleSaveVideos()}>
+            Trimmed Video Saved at
           </Text>
           <Video
             source={{ uri: trimmedVideoUri }}

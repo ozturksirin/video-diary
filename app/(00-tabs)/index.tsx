@@ -1,33 +1,65 @@
-import { Image, StyleSheet, Platform, Text, SafeAreaView } from "react-native";
-
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { View, Text, SafeAreaView, ScrollView, FlatList } from "react-native";
+import { Video } from "expo-av";
+import { useSavedVideos } from "@/hooks/useSavedVideos";
 
 export default function HomeScreen() {
+  const { data: savedVideos, isLoading, isError } = useSavedVideos();
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>Loading...</Text>;
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>Error loading videos!</Text>;
+      </View>
+    );
+  }
+
+  if (!savedVideos?.length) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-center justify-center">
+          No saved videos found!
+        </Text>
+      </View>
+    );
+  }
+
+  const renderItem = ({ item }: { item: { id: number; uri: string } }) => (
+    <View
+      key={item.id}
+      className="bg-gray-300 rounded-lg overflow-hidden mb-4 h-48"
+    >
+      <Video
+        source={{ uri: item.uri }}
+        style={{ width: "100%", height: "100%" }}
+        resizeMode="cover"
+        shouldPlay
+        isLooping
+        useNativeControls={false}
+      />
+    </View>
+  );
+
   return (
-    <SafeAreaView>
-      <Text>index 1</Text>
+    <SafeAreaView className="flex-1 bg-gray-100">
+      <Text className="text-2xl font-bold text-center mt-4 mb-4">
+        Croped Videos
+      </Text>
+      <ScrollView className="px-4">
+        <FlatList
+          data={savedVideos}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-  },
-});

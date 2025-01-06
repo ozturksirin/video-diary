@@ -10,11 +10,14 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated"; // Animasyon desteği
 import "../global.css"; // Global CSS için NativeWind desteği
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 // SplashScreen'i gizlemeden önce bekler
 SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   // Tema seçimi (dark/light)
@@ -38,19 +41,21 @@ export default function RootLayout() {
   }
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(00-tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="(crops)"
-          options={{
-            headerShown: true,
-            title: "Crop Video", // Başlık
-            headerBackTitle: "Geri", //
-          }}
-        />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
+      <QueryClientProvider client={queryClient}>
+        <Stack>
+          <Stack.Screen name="(00-tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(crops)"
+            options={{
+              headerShown: true,
+              title: "Crop Video", // Başlık
+              headerBackTitle: "Geri", //
+            }}
+          />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }
