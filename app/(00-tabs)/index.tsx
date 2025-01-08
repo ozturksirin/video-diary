@@ -10,6 +10,13 @@ import { Video } from "expo-av";
 import { useSavedVideos } from "@/hooks/useSavedVideos";
 import { router } from "expo-router";
 
+interface SavedVideo {
+  id: number;
+  uri: string;
+  title: string;
+  description: string;
+}
+
 export default function HomeScreen() {
   const { data: savedVideos, isLoading, isError } = useSavedVideos();
 
@@ -39,7 +46,7 @@ export default function HomeScreen() {
     );
   }
 
-  const renderItem = ({ item }: { item: { id: number; uri: string } }) => (
+  const renderItem = ({ item }: { item: SavedVideo }) => (
     <TouchableOpacity
       onPress={() =>
         router.push(
@@ -48,14 +55,19 @@ export default function HomeScreen() {
       }
       className="bg-gray-300 rounded-lg overflow-hidden mb-4 h-48"
     >
-      <Video
-        source={{ uri: item.uri }}
-        style={{ width: "100%", height: "100%" }}
-        resizeMode="cover"
-        shouldPlay
-        isLooping
-        useNativeControls={false}
-      />
+      <View className="flex-1">
+        <Video
+          source={{ uri: item.uri }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+          shouldPlay
+          isLooping
+          useNativeControls={false}
+        />
+        <View className="absolute bottom-0 left-0 right-0 bg-black/50 p-2">
+          <Text className="text-white font-medium">{item.title}</Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 

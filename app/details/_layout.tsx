@@ -4,7 +4,9 @@ export default function DetailsLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false, // Detay sayfasında başlık göstermek istiyorsanız
+        headerShown: false,
+        headerTitle: "Details",
+        headerBackTitle: "Back",
       }}
     />
   );

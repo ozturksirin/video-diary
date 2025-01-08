@@ -2,24 +2,23 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+
+interface VideoData {
+  uri: string;
+  title: string;
+  description: string;
+}
+
 const saveVideoToStorage = async (
-  trimmedVideoUri: string
-): Promise<string[]> => {
-  if (!trimmedVideoUri) {
+  videoData: VideoData
+): Promise<VideoData[]> => {
+  if (!videoData.uri) {
     throw new Error("No video URI to save.");
   }
-
-  // AsyncStorage'den mevcut videoları al
   const savedVideos = await AsyncStorage.getItem("@SAVED_VIDEOS");
   const videoList = savedVideos ? JSON.parse(savedVideos) : [];
-
-  // Yeni video URI'sini listeye ekle
-  const updatedVideoList = [...videoList, trimmedVideoUri];
-
-  // AsyncStorage'e güncellenmiş listeyi kaydet
+  const updatedVideoList = [...videoList, videoData];
   await AsyncStorage.setItem("@SAVED_VIDEOS", JSON.stringify(updatedVideoList));
-
-  // Güncellenmiş video listesini döndür
   return updatedVideoList;
 };
 
@@ -35,10 +34,20 @@ export const useSaveVideo = () => {
               ...oldVideos,
               {
                 id: oldVideos.length + 1,
-                uri: updatedVideos[updatedVideos.length - 1],
+                uri: updatedVideos[updatedVideos.length - 1].uri,
+                title: updatedVideos[updatedVideos.length - 1].title,
+                description:
+                  updatedVideos[updatedVideos.length - 1].description,
               },
             ]
-          : [{ id: 1, uri: updatedVideos[0] }];
+          : [
+              {
+                id: 1,
+                uri: updatedVideos[0].uri,
+                title: updatedVideos[0].title,
+                description: updatedVideos[0].description,
+              },
+            ];
         console.log("Updated cache videos:", mergedVideos);
         return mergedVideos;
       });

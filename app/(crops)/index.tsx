@@ -94,21 +94,19 @@ const TrimVideo = () => {
     const localUri = videoData?.uri.replace("file://", "");
     const localOutput = trimmedOutput.replace("file://", "");
 
-    // Zamanı HH:MM:SS formatına dönüştüren fonksiyon
     const formatTime = (timeInSeconds: number) => {
       const hours = Math.floor(timeInSeconds / 3600);
       const minutes = Math.floor((timeInSeconds % 3600) / 60);
       const seconds = timeInSeconds % 60;
       return [hours, minutes, seconds]
-        .map((v) => String(v).padStart(2, "0")) // Her değeri iki haneli yapar
+        .map((v) => String(v).padStart(2, "0"))
         .join(":");
     };
 
-    const startTimeFormatted = formatTime(startTime); // Kullanıcı başlangıç zamanı
-    const duration = endTime - startTime; // Süreyi hesapla
-    const durationFormatted = formatTime(duration); // Süreyi formatla
+    const startTimeFormatted = formatTime(startTime);
+    const duration = endTime - startTime;
+    const durationFormatted = formatTime(duration);
 
-    // Dinamik olarak süreler dahil edilmiş FFmpeg komutu
     const command = `-y -ss ${startTimeFormatted} -i "${localUri}" -t ${durationFormatted} -c copy "${localOutput}"`;
 
     try {
@@ -117,7 +115,6 @@ const TrimVideo = () => {
 
         if (ReturnCode.isSuccess(returnCode)) {
           const logs = await session.getLogs();
-          //logs.forEach((log) => console.log("FFmpeg Log:", log.message));
 
           setTrimmedVideoUri(trimmedOutput);
           setSelectedPoints([]);
@@ -143,7 +140,11 @@ const TrimVideo = () => {
   const handleSaveVideos = () => {
     console.log("trimmedVideoUri", trimmedVideoUri);
     if (trimmedVideoUri) {
-      mutate(trimmedVideoUri);
+      mutate({
+        uri: trimmedVideoUri,
+        title: title,
+        description: description,
+      });
     } else {
       Alert.alert("Error", "No trimmed video to save.");
     }
@@ -155,6 +156,8 @@ const TrimVideo = () => {
         source={{ uri: videoData?.uri || "" }}
         style={{ flex: 2, width: "100%" }}
         useNativeControls
+        shouldPlay
+        isLooping
       />
 
       <View className=" bg-gray-900 p-4">
