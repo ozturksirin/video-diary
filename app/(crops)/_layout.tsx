@@ -12,8 +12,8 @@ export default function CropLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: "Crop Video", // Başlık
-          headerShown: false, // Header'ı göster
+          title: "Crop Video",
+          headerShown: false,
         }}
       />
     </Stack>

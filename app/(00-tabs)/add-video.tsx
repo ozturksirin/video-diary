@@ -74,13 +74,14 @@ export default function AddVideo() {
       return;
     }
 
-    addVideo(video, input.title, input.description); // Store'a videoyu, başlığı ve açıklamayı ekle
+    addVideo(video, input.title, input.description);
     console.log("Video added to Zustand Store:", {
       video: video,
       title: input.title,
       description: input.description,
     });
     router.navigate("/(crops)");
+    setVideo(null);
     setInput({
       title: "",
       description: "",
