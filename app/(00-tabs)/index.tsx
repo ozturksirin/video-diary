@@ -1,6 +1,14 @@
-import { View, Text, SafeAreaView, ScrollView, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  SafeAreaView,
+  ScrollView,
+  FlatList,
+  TouchableOpacity,
+} from "react-native";
 import { Video } from "expo-av";
 import { useSavedVideos } from "@/hooks/useSavedVideos";
+import { router } from "expo-router";
 
 export default function HomeScreen() {
   const { data: savedVideos, isLoading, isError } = useSavedVideos();
@@ -32,8 +40,12 @@ export default function HomeScreen() {
   }
 
   const renderItem = ({ item }: { item: { id: number; uri: string } }) => (
-    <View
-      key={item.id}
+    <TouchableOpacity
+      onPress={() =>
+        router.push(
+          `/details/${item.id}?data=${encodeURIComponent(JSON.stringify(item))}`
+        )
+      }
       className="bg-gray-300 rounded-lg overflow-hidden mb-4 h-48"
     >
       <Video
@@ -44,7 +56,7 @@ export default function HomeScreen() {
         isLooping
         useNativeControls={false}
       />
-    </View>
+    </TouchableOpacity>
   );
 
   return (

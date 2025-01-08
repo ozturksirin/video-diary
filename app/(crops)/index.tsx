@@ -16,6 +16,8 @@ import { useSaveVideo } from "@/hooks/useSaveVideo";
 
 const TrimVideo = () => {
   const videoData = useVideoStore((state) => state.video);
+  const title = useVideoStore((state) => state.title);
+  const description = useVideoStore((state) => state.description);
   const [startTime, setStartTime] = useState<number>(0);
   const [endTime, setEndTime] = useState<number>(
     Math.floor((videoData?.duration ?? 0) / 1000)
