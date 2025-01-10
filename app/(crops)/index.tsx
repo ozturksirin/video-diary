@@ -6,6 +6,7 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Video } from "expo-av";
 import { Button } from "react-native-elements";
@@ -27,12 +28,14 @@ const TrimVideo = () => {
   const [thumbnails, setThumbnails] = useState<string[]>([]);
   const [selectedPoints, setSelectedPoints] = useState<number[]>([]);
   const { mutate } = useSaveVideo();
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     generateThumbnails();
   }, [videoData]);
 
   const generateThumbnails = async () => {
+    setLoading(true);
     if (!videoData?.uri) {
       return;
     }
@@ -77,6 +80,7 @@ const TrimVideo = () => {
     } catch (error) {
       console.error("Thumbnail Generation Error:", error);
     }
+    setLoading(false);
   };
 
   const generateUniqueFileName = () => {
@@ -152,105 +156,120 @@ const TrimVideo = () => {
 
   return (
     <View className="flex-1 bg-black">
-      <Video
-        source={{ uri: videoData?.uri || "" }}
-        style={{ flex: 2, width: "100%" }}
-        useNativeControls
-        shouldPlay
-        isLooping
-      />
-
-      <View className=" bg-gray-900 p-4">
-        <Text className="text-white mb-2">
-          {selectedPoints.length === 2
-            ? "Ready to trim"
-            : selectedPoints.length === 1
-            ? "Select end point"
-            : "Select start point"}
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="bg-gray-800 rounded-lg py-2 px-4"
-        >
-          {thumbnails.map((thumbnail, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => {
-                if (selectedPoints.length === 0) {
-                  setSelectedPoints([index]);
-                } else if (selectedPoints.length === 1) {
-                  const start = Math.min(selectedPoints[0], index);
-                  const end = Math.max(selectedPoints[0], index);
-                  setSelectedPoints([start, end]);
-                } else {
-                  setSelectedPoints([index]);
-                }
-              }}
-              className={`w-16 h-16 m-1 rounded-md flex items-center justify-center ${
-                selectedPoints.length === 2 &&
-                index >= Math.min(...selectedPoints) &&
-                index <= Math.max(...selectedPoints)
-                  ? "border-2 border-blue-500"
-                  : selectedPoints.includes(index)
-                  ? "border-2 border-green-500"
-                  : "border-2 border-gray-600"
-              }`}
-            >
-              <Image
-                source={{ uri: thumbnail }}
-                className="w-16 h-16 rounded-md"
-                onError={(e) =>
-                  console.error(`Failed to load thumbnail at index ${index}`, e)
-                }
-              />
-              <Text className="text-white text-xs">{index}s</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <View className="flex-row justify-between mt-4">
-          <Text className="text-white">Start: {startTime}s</Text>
-          <Text className="text-white">End: {endTime}s</Text>
-        </View>
-      </View>
-
-      {selectedPoints.length === 2 && (
-        <Button
-          title={`Trim ${Math.min(...selectedPoints)}s - ${Math.max(
-            ...selectedPoints
-          )}s`}
-          onPress={() => {
-            const startTime = Math.min(...selectedPoints);
-            const endTime = Math.max(...selectedPoints);
-            handleTrimVideo(startTime, endTime);
-          }}
-          buttonStyle={{
-            backgroundColor: "#007AFF",
-            padding: 10,
-            marginTop: 10,
-          }}
-          titleStyle={{ color: "#fff", fontSize: 16 }}
+      {loading ? (
+        <ActivityIndicator
+          size={"large"}
+          style={{ justifyContent: "center", alignItems: "center" }}
         />
-      )}
-
-      {isTrimming && (
-        <View className="absolute inset-0 bg-black/50 justify-center items-center">
-          <Text className="text-white">Trimming Video...</Text>
-        </View>
-      )}
-
-      {!isTrimming && trimmedVideoUri && (
-        <View className="flex-2 p-4">
-          <Text className="text-white mb-2" onPress={() => handleSaveVideos()}>
-            Trimmed Video Saved at
-          </Text>
+      ) : (
+        <>
           <Video
-            source={{ uri: trimmedVideoUri }}
-            style={{ width: "100%", height: 200 }}
+            source={{ uri: videoData?.uri || "" }}
+            style={{ flex: 2, width: "100%" }}
             useNativeControls
+            shouldPlay
+            isLooping
           />
-        </View>
+
+          <View className=" bg-gray-900 p-4">
+            <Text className="text-white mb-2">
+              {selectedPoints.length === 2
+                ? "Ready to trim"
+                : selectedPoints.length === 1
+                ? "Select end point"
+                : "Select start point"}
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="bg-gray-800 rounded-lg py-2 px-4"
+            >
+              {thumbnails.map((thumbnail, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    if (selectedPoints.length === 0) {
+                      setSelectedPoints([index]);
+                    } else if (selectedPoints.length === 1) {
+                      const start = Math.min(selectedPoints[0], index);
+                      const end = Math.max(selectedPoints[0], index);
+                      setSelectedPoints([start, end]);
+                    } else {
+                      setSelectedPoints([index]);
+                    }
+                  }}
+                  className={`w-16 h-16 m-1 rounded-md flex items-center justify-center ${
+                    selectedPoints.length === 2 &&
+                    index >= Math.min(...selectedPoints) &&
+                    index <= Math.max(...selectedPoints)
+                      ? "border-2 border-blue-500"
+                      : selectedPoints.includes(index)
+                      ? "border-2 border-green-500"
+                      : "border-2 border-gray-600"
+                  }`}
+                >
+                  <Image
+                    source={{ uri: thumbnail }}
+                    className="w-16 h-16 rounded-md"
+                    onError={(e) =>
+                      console.error(
+                        `Failed to load thumbnail at index ${index}`,
+                        e
+                      )
+                    }
+                  />
+                  <Text className="text-white text-xs">{index}s</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <View className="flex-row justify-between mt-4">
+              <Text className="text-white">Start: {startTime}s</Text>
+              <Text className="text-white">End: {endTime}s</Text>
+            </View>
+          </View>
+
+          {selectedPoints.length === 2 && (
+            <Button
+              title={`Trim ${Math.min(...selectedPoints)}s - ${Math.max(
+                ...selectedPoints
+              )}s`}
+              onPress={() => {
+                const startTime = Math.min(...selectedPoints);
+                const endTime = Math.max(...selectedPoints);
+                handleTrimVideo(startTime, endTime);
+              }}
+              buttonStyle={{
+                backgroundColor: "#007AFF",
+                padding: 10,
+                marginTop: 10,
+              }}
+              titleStyle={{ color: "#fff", fontSize: 16 }}
+            />
+          )}
+
+          {isTrimming && (
+            <View className="absolute inset-0 bg-black/50 justify-center items-center">
+              <Text className="text-white">Trimming Video...</Text>
+            </View>
+          )}
+
+          {!isTrimming && trimmedVideoUri && (
+            <View className="flex-2 p-4">
+              <Text
+                className="text-white mb-2"
+                onPress={() => handleSaveVideos()}
+              >
+                Trimmed Video Saved at
+              </Text>
+              <Video
+                source={{ uri: trimmedVideoUri }}
+                style={{ width: "100%", height: 200 }}
+                useNativeControls
+              />
+            </View>
+          )}
+        </>
       )}
     </View>
   );
